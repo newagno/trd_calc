@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incrypted Bot Strategy Calculator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--cr:#1e293b;--bd:#334155;--tx:#cbd5e1;--tx2:#94a3b8;--tx3:#64748b;--ac:#38bdf8;--ac2:#818cf8;--ac3:#c084fc;--ok:#10b981;--wn:#f59e0b;--er:#ef4444}
+body{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;background:var(--bg);color:var(--tx);min-height:100vh;padding:14px 8px}
+.wrap{max-width:680px;margin:0 auto}
+.card{background:var(--cr);border-radius:12px;padding:14px;border:1px solid var(--bd);margin-bottom:10px}
+.sec{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec::before{content:'';width:3px;height:14px;border-radius:2px;display:inline-block}
+.sec.blue{color:var(--ac)}.sec.blue::before{background:var(--ac)}
+.sec.purple{color:var(--ac2)}.sec.purple::before{background:var(--ac2)}
+.sec.violet{color:var(--ac3)}.sec.violet::before{background:var(--ac3)}
+.sec.gray{color:var(--tx3)}.sec.gray::before{background:var(--tx3)}
+.sec.green{color:var(--ok)}.sec.green::before{background:var(--ok)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+label{font-size:10px;color:var(--tx2);margin-bottom:3px;display:block;font-weight:600}
+label .n{font-size:9px;color:var(--tx3);margin-right:3px}
+input,select{background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px 10px;color:#e2e8f0;font-size:12px;font-family:inherit;width:100%;outline:none}
+input:focus,select:focus{border-color:var(--ac)}
+input.filled{border-color:var(--ac)!important;background:#0f172acc}
+select{cursor:pointer}
+.row{background:var(--bg);border-radius:5px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.row .lbl{font-size:9px;color:var(--tx3)}.row .val{font-size:11px;font-weight:700;color:#e2e8f0}
+.row .val.dim{color:var(--tx3)}
+.btn{width:100%;padding:12px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800;color:white;letter-spacing:1px;transition:all .2s}
+.btn.primary{background:linear-gradient(135deg,#3b82f6,#818cf8)}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.disabled{background:var(--bd);cursor:default}
+.btn.secondary{background:transparent;border:1px solid var(--bd);color:var(--tx2);font-size:11px;padding:6px 12px;width:auto;font-weight:600}
+.btn.secondary:hover{border-color:var(--ac);color:var(--ac)}
+.warn{font-size:9px;color:var(--wn);padding:4px 0;display:flex;gap:6px;align-items:flex-start}
+.metric{display:flex;flex-direction:column;align-items:center;padding:10px;background:var(--bg);border-radius:5px;text-align:center}
+.metric .l{font-size:7px;color:var(--tx3)}.metric .v{font-size:16px;font-weight:800}.metric .s{font-size:8px;font-weight:600}
+.sub{font-size:9px;color:var(--tx3);margin-bottom:5px}
+
+/* Upload area */
+.upload{border:2px dashed var(--bd);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .3s;position:relative;margin-bottom:10px}
+.upload:hover,.upload.drag{border-color:var(--ac);background:rgba(56,189,248,0.05)}
+.upload.processing{border-color:var(--wn);background:rgba(245,158,11,0.05)}
+.upload.done{border-color:var(--ok);background:rgba(16,185,129,0.05)}
+.upload .icon{font-size:28px;margin-bottom:6px}
+.upload .txt{font-size:11px;color:var(--tx3)}
+.upload .txt b{color:var(--tx2)}
+.upload input[type=file]{display:none}
+.preview{max-width:100%;max-height:150px;border-radius:6px;margin-top:8px;opacity:0.8}
+
+/* API key */
+.api-row{display:flex;gap:6px;margin-bottom:10px;align-items:flex-end}
+.api-row>div:first-child{flex:1}
+.api-row .btn{width:auto;padding:8px 14px;font-size:10px}
+.api-status{font-size:9px;margin-top:2px}
+.api-status.ok{color:var(--ok)}.api-status.no{color:var(--tx3)}
+
+/* Help toggle */
+.help-box{background:var(--cr);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid rgba(56,189,248,0.25)}
+.help-item{background:var(--bg);border-radius:6px;padding:10px;margin-bottom:8px}
+.help-item:last-child{margin-bottom:0}
+.help-item h4{font-size:10px;font-weight:700;margin-bottom:4px}
+.help-item p{font-size:9px;color:var(--tx2);line-height:1.8}
+.help-item p b{color:#e2e8f0}
+.help-item p .hl{color:var(--ac)}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--bd);border-top:2px solid var(--wn);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Results hidden by default */
+#results{display:none}
+.formula{font-size:8px;color:var(--tx2);line-height:2}
+.formula b{color:#e2e8f0}
+.formula .hl{color:var(--ac)}
+
+/* Header */
+.header{text-align:center;margin-bottom:16px;padding:16px 10px;background:linear-gradient(135deg,var(--cr),var(--bg));border-radius:14px;border:1px solid var(--bd)}
+.header .sub{font-size:9px;color:var(--tx3);letter-spacing:4px;text-transform:uppercase}
+.header h1{font-size:19px;font-weight:800;margin:4px 0;background:linear-gradient(135deg,#38bdf8,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .desc{font-size:9px;color:var(--tx3)}
+
+/* Deploy info */
+.deploy{font-size:9px;color:var(--tx3);text-align:center;padding:10px;line-height:1.8}
+.deploy a{color:var(--ac);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- Header -->
+<div class="header">
+  <div class="sub">Incrypted Trading Bot</div>
+  <h1>Strategy Calculator v3</h1>
+  <div class="desc">Upload TradingView screenshot or enter data manually</div>
+</div>
+
+<!-- API Key -->
+<div class="card">
+  <div class="sec blue">Gemini API Key (for image recognition — FREE)</div>
+  <div class="api-row">
+    <div>
+      <label>API Key <span style="color:var(--tx3)">(get free at aistudio.google.com → Get API Key)</span></label>
+      <input type="password" id="apiKey" placeholder="AIza..." value="">
+    </div>
+    <button class="btn secondary" onclick="saveApiKey()">Save</button>
+  </div>
+  <div id="apiStatus" class="api-status no">No API key — <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--ac);text-decoration:none">Get free key here</a></div>
+</div>
+
+<!-- Image Upload -->
+<div class="card">
+  <div class="sec green">Screenshot Upload</div>
+  <div class="upload" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this.files[0])">
+    <div class="icon" id="uploadIcon">📸</div>
+    <div class="txt" id="uploadText">
+      <b>Drop TradingView screenshot here</b> or click to upload<br>
+      <span style="font-size:8px;color:var(--tx3)">Supports: PNG, JPG. Will extract ATR, RSI, EMA, MACD, BB values</span>
+    </div>
+    <img id="preview" class="preview" style="display:none">
+  </div>
+  <div id="parseStatus" style="font-size:9px;color:var(--tx3);text-align:center"></div>
+</div>
+
+<!-- Input Form -->
+<div class="card">
+  <div class="sec blue">Input Data</div>
+
+  <!-- 1-2: Pair + Price -->
+  <div class="grid2">
+    <div>
+      <label><span class="n">1.</span>Pair</label>
+      <select id="coin">
+        <option value="BTC/USDT">BTC/USDT</option>
+        <option value="ETH/USDT">ETH/USDT</option>
+        <option value="SOL/USDT">SOL/USDT</option>
+        <option value="XRP/USDT">XRP/USDT</option>
+        <option value="BNB/USDT">BNB/USDT</option>
+        <option value="ARB/USDT">ARB/USDT</option>
+        <option value="DOGE/USDT">DOGE/USDT</option>
+        <option value="AVAX/USDT">AVAX/USDT</option>
+        <option value="LINK/USDT">LINK/USDT</option>
+        <option value="SUI/USDT">SUI/USDT</option>
+        <option value="WIF/USDT">WIF/USDT</option>
+        <option value="PEPE/USDT">PEPE/USDT</option>
+        <option value="OP/USDT">OP/USDT</option>
+        <option value="APT/USDT">APT/USDT</option>
+        <option value="INJ/USDT">INJ/USDT</option>
+      </select>
+    </div>
+    <div>
+      <label><span class="n">2.</span>Price (or leave default)</label>
+      <input type="number" step="any" id="price" placeholder="auto">
+    </div>
+  </div>
+
+  <!-- 3-4: ATR + RSI -->
+  <div class="grid2">
+    <div>
+      <label><span class="n">3.</span>ATR (14) value from chart</label>
+      <input type="number" step="any" id="atr" placeholder="e.g. 450">
+    </div>
+    <div>
+      <label><span class="n">4.</span>RSI (14)</label>
+      <input type="number" step="0.1" min="0" max="100" id="rsi" placeholder="e.g. 42">
+    </div>
+  </div>
+
+  <!-- 5-6-7: TF + Goal + Exchange -->
+  <div class="grid3">
+    <div>
+      <label><span class="n">5.</span>Timeframe</label>
+      <select id="tf">
+        <option value="1m">1m</option>
+        <option value="5m" selected>5m</option>
+        <option value="15m">15m</option>
+        <option value="30m">30m</option>
+        <option value="1h">1h</option>
+      </select>
+    </div>
+    <div>
+      <label><span class="n">6.</span>Goal</label>
+      <select id="goal">
+        <option value="volume">Max Volume</option>
+        <option value="balanced" selected>Balanced</option>
+        <option value="pnl">Positive PnL</option>
+      </select>
+    </div>
+    <div>
+      <label><span class="n">7.</span>Exchange</label>
+      <select id="exchange">
+        <option value="Nado">Nado (Ink L2)</option>
+        <option value="Extended">Extended (Starknet)</option>
+        <option value="Variational">Variational</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 8: Additional indicators -->
+  <div style="background:var(--bg);border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid var(--bd)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;color:var(--wn)">8. Additional indicators (optional)</div>
+      <button class="btn secondary" onclick="toggleHelp()" id="helpBtn">How to find?</button>
+    </div>
+
+    <!-- Help guide (hidden by default) -->
+    <div id="helpGuide" style="display:none" class="help-box">
+      <div style="font-size:11px;font-weight:700;color:var(--ac);margin-bottom:10px">TradingView Guide</div>
+
+      <div class="help-item" style="border:1px solid rgba(245,158,11,0.3)">
+        <h4 style="color:var(--wn)">EMA (Exponential Moving Average)</h4>
+        <p>
+          TradingView &gt; Indicators &gt; search <b>"exponential"</b><br>
+          Select: <b class="hl">"Moving Average Exponential"</b> in TECHNICALS<br>
+          <span style="color:var(--tx3)">(or from Community: "Exponential Moving Averages" by Merc15)</span><br><br>
+          Settings: Length = <b class="hl">21</b> (short) or <b class="hl">50</b> (medium)<br><br>
+          <b>How to read:</b><br>
+          • Price candles ABOVE EMA line = <b style="color:var(--ok)">bullish</b> → "Price above EMA"<br>
+          • Price candles BELOW EMA line = <b style="color:var(--er)">bearish</b> → "Price below EMA"<br>
+          • EMA 21 crosses ABOVE EMA 50 = <b style="color:var(--ok)">Golden cross</b><br>
+          • EMA 21 crosses BELOW EMA 50 = <b style="color:var(--er)">Death cross</b>
+        </p>
+      </div>
+
+      <div class="help-item">
+        <h4 style="color:var(--ok)">MACD</h4>
+        <p>
+          Indicators &gt; search <b>"MACD"</b> &gt; add built-in <b class="hl">"MACD"</b><br>
+          Settings: default (12, 26, 9)<br><br>
+          <b>Look at the histogram (colored bars):</b><br>
+          • Bars <b style="color:var(--ok)">green / above zero</b> = "Positive (bullish)"<br>
+          • Bars <b style="color:var(--er)">red / below zero</b> = "Negative (bearish)"<br>
+          • Blue line crosses ABOVE orange = "Bull crossover"<br>
+          • Blue line crosses BELOW orange = "Bear crossover"
+        </p>
+      </div>
+
+      <div class="help-item">
+        <h4 style="color:var(--ok)">Bollinger Bands</h4>
+        <p>
+          Indicators &gt; search <b>"BB"</b> or <b>"Bollinger"</b> &gt; add <b class="hl">"Bollinger Bands"</b><br>
+          Settings: Length = 20, StdDev = 2 (default)<br><br>
+          <b>3 lines on chart (upper, middle, lower):</b><br>
+          • Price near <b style="color:var(--ok)">lower band</b> = potential bounce → "Near lower"<br>
+          • Price near <b style="color:var(--er)">upper band</b> = potential drop → "Near upper"<br>
+          • Bands very <b style="color:var(--wn)">narrow</b> = squeeze, expect big move → "Squeeze"
+        </p>
+      </div>
+
+      <div class="help-item">
+        <h4 style="color:var(--ok)">Volume</h4>
+        <p>
+          Volume bars shown at bottom of chart by default<br>
+          Compare current bars to recent average visually<br>
+          • Shorter than usual = "Below average"<br>
+          • Normal = "Normal"<br>
+          • Taller than usual = "Above average"<br>
+          • One huge bar (2-3x) = "Volume spike"
+        </p>
+      </div>
+
+      <div class="help-item">
+        <h4 style="color:var(--ok)">Funding Rate</h4>
+        <p>
+          <b style="color:var(--er)">NOT on TradingView!</b> Check on:<br>
+          • <b class="hl">coinglass.com</b> &gt; Funding Rate<br>
+          • Or directly on your exchange<br><br>
+          • Around +0.01% = "Positive (normal)"<br>
+          • Above +0.05% = "Positive (high)" — longs pay more<br>
+          • Below 0% = "Negative" — shorts pay, LONG better<br>
+          • Below -0.05% = "Very negative" — strong LONG signal
+        </p>
+      </div>
+    </div>
+
+    <!-- Indicator selects -->
+    <div class="grid2" style="margin-bottom:6px">
+      <div>
+        <label style="font-size:9px">EMA (21/50) position</label>
+        <select id="ema" style="font-size:11px">
+          <option value="">-- skip --</option>
+          <option value="above">Price above EMA</option>
+          <option value="below">Price below EMA</option>
+          <option value="cross_up">Golden cross (EMA up)</option>
+          <option value="cross_down">Death cross (EMA down)</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:9px">MACD histogram</label>
+        <select id="macd" style="font-size:11px">
+          <option value="">-- skip --</option>
+          <option value="bull">Positive (bullish)</option>
+          <option value="bear">Negative (bearish)</option>
+          <option value="cross_up">Bull crossover</option>
+          <option value="cross_down">Bear crossover</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid3">
+      <div>
+        <label style="font-size:9px">Bollinger Bands</label>
+        <select id="bb" style="font-size:11px">
+          <option value="">-- skip --</option>
+          <option value="lower">Near lower band</option>
+          <option value="middle">Middle</option>
+          <option value="upper">Near upper band</option>
+          <option value="squeeze">Squeeze</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:9px">Volume vs avg</label>
+        <select id="vol" style="font-size:11px">
+          <option value="">-- skip --</option>
+          <option value="low">Below average</option>
+          <option value="normal">Normal</option>
+          <option value="high">Above average</option>
+          <option value="spike">Volume spike</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:9px">Funding Rate</label>
+        <select id="funding" style="font-size:11px">
+          <option value="">-- skip --</option>
+          <option value="pos_low">Positive (normal)</option>
+          <option value="pos_high">Positive (high)</option>
+          <option value="neg">Negative</option>
+          <option value="neg_high">Very negative</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULATE -->
+  <button class="btn primary" onclick="calculate()">CALCULATE</button>
+</div>
+
+<!-- ===== RESULTS ===== -->
+<div id="results">
+
+  <!-- Market Analysis -->
+  <div class="card" id="analysisCard">
+    <div class="sec purple">Market Analysis</div>
+    <div class="grid3" id="analysisGrid"></div>
+    <div id="indicatorDetails" class="grid2" style="margin-top:6px"></div>
+  </div>
+
+  <!-- Warnings -->
+  <div class="card" id="warningsCard" style="display:none;border:1px solid rgba(245,158,11,0.25);background:#1a1a10">
+    <div id="warningsList"></div>
+  </div>
+
+  <!-- Bot Settings -->
+  <div class="card">
+    <div class="sec blue">Bot Settings</div>
+
+    <div class="sub">Global</div>
+    <div id="globalSettings"></div>
+
+    <div class="sub" style="margin-top:10px">Pair Config</div>
+    <div id="pairSettings"></div>
+
+    <div class="sub" style="margin-top:10px">Take Profit</div>
+    <div id="tpSettings"></div>
+
+    <div class="sub" style="margin-top:10px">Risk</div>
+    <div id="riskSettings"></div>
+  </div>
+
+  <!-- Estimates -->
+  <div class="card">
+    <div class="sec violet">Estimates</div>
+    <div class="grid3" id="estimatesGrid"></div>
+  </div>
+
+  <!-- Formulas -->
+  <div class="card">
+    <div class="sec gray">Formulas</div>
+    <div class="formula" id="formulas"></div>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div id="emptyState" class="card" style="text-align:center;padding:28px">
+  <div style="font-size:13px;color:var(--tx3);margin-bottom:10px">Upload screenshot or fill data manually, then CALCULATE</div>
+  <div style="font-size:9px;color:#475569;line-height:2;text-align:left;max-width:440px;margin:0 auto">
+    <b style="color:var(--ac)">Option A:</b> Upload TradingView screenshot → auto-fill → Calculate<br>
+    <b style="color:var(--ac)">Option B:</b> Enter ATR + RSI manually → Calculate<br><br>
+    <b style="color:var(--wn)">Important:</b> All indicators on the SAME timeframe<br>
+    <b style="color:var(--tx2)">Minimum:</b> just ATR value is enough to calculate
+  </div>
+</div>
+
+<!-- Deploy info -->
+<div class="deploy">
+  Hosted on <a href="https://pages.github.com" target="_blank">GitHub Pages</a> •
+  Image analysis powered by Gemini API (free, your key stays in your browser) •
+  <a href="#" onclick="showDeployGuide();return false">How to deploy?</a>
+</div>
+
+<!-- Deploy Guide Modal -->
+<div id="deployGuide" style="display:none" class="card" style="margin-top:10px">
+  <div class="sec blue">Deploy to GitHub Pages</div>
+  <div style="font-size:9px;color:var(--tx2);line-height:2">
+    <b style="color:#e2e8f0">1.</b> Create new repository on github.com<br>
+    <b style="color:#e2e8f0">2.</b> Upload this file as <b style="color:var(--ac)">index.html</b><br>
+    <b style="color:#e2e8f0">3.</b> Go to Settings → Pages → Source: main branch<br>
+    <b style="color:#e2e8f0">4.</b> Your calculator will be at: <b style="color:var(--ac)">https://username.github.io/repo-name/</b><br><br>
+    <b style="color:var(--wn)">Note:</b> API key is saved only in YOUR browser (localStorage), nobody else can see it. Gemini API is free (15 req/min).
+  </div>
+</div>
+
+</div>
+
+<script>
+// ============ COIN & EXCHANGE DATA ============
+const COINS = {
+  "BTC/USDT": { p: 85000, ml: 50 },
+  "ETH/USDT": { p: 3200, ml: 50 },
+  "SOL/USDT": { p: 140, ml: 20 },
+  "XRP/USDT": { p: 2.3, ml: 20 },
+  "BNB/USDT": { p: 620, ml: 20 },
+  "ARB/USDT": { p: 0.35, ml: 10 },
+  "DOGE/USDT": { p: 0.18, ml: 10 },
+  "AVAX/USDT": { p: 22, ml: 20 },
+  "LINK/USDT": { p: 14, ml: 20 },
+  "SUI/USDT": { p: 2.8, ml: 10 },
+  "WIF/USDT": { p: 0.5, ml: 5 },
+  "PEPE/USDT": { p: 0.000008, ml: 5 },
+  "OP/USDT": { p: 1.2, ml: 10 },
+  "APT/USDT": { p: 5.5, ml: 10 },
+  "INJ/USDT": { p: 12, ml: 10 },
+};
+const EXCHANGES = {
+  "Nado": { fee: 0.035, hasLev: false },
+  "Extended": { fee: 0.035, hasLev: true },
+  "Variational": { fee: 0.04, hasLev: true },
+};
+
+// ============ API KEY ============
+function saveApiKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  if (key) {
+    localStorage.setItem('gemini_api_key', key);
+    document.getElementById('apiStatus').textContent = 'Key saved ✓ (free tier: 15 requests/min)';
+    document.getElementById('apiStatus').className = 'api-status ok';
+  }
+}
+function loadApiKey() {
+  const key = localStorage.getItem('gemini_api_key');
+  if (key) {
+    document.getElementById('apiKey').value = key;
+    document.getElementById('apiStatus').textContent = 'Key saved ✓ (free tier: 15 requests/min)';
+    document.getElementById('apiStatus').className = 'api-status ok';
+  }
+}
+
+// ============ HELP TOGGLE ============
+function toggleHelp() {
+  const g = document.getElementById('helpGuide');
+  const b = document.getElementById('helpBtn');
+  if (g.style.display === 'none') { g.style.display = 'block'; b.textContent = 'Hide guide'; }
+  else { g.style.display = 'none'; b.textContent = 'How to find?'; }
+}
+
+// ============ DEPLOY GUIDE ============
+function showDeployGuide() {
+  const g = document.getElementById('deployGuide');
+  g.style.display = g.style.display === 'none' ? 'block' : 'none';
+}
+
+// ============ IMAGE UPLOAD ============
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault(); uploadArea.classList.remove('drag');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById('uploadIcon').textContent = '✅';
+    document.getElementById('uploadText').innerHTML = '<b>' + file.name + '</b> loaded';
+    // Try to parse with API
+    parseImage(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+async function parseImage(dataUrl) {
+  const apiKey = localStorage.getItem('gemini_api_key');
+  if (!apiKey) {
+    document.getElementById('parseStatus').innerHTML = '<span style="color:var(--wn)">No API key — fill data manually or <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--ac)">get free Gemini key</a></span>';
+    return;
+  }
+
+  const area = document.getElementById('uploadArea');
+  area.classList.add('processing');
+  document.getElementById('parseStatus').innerHTML = '<span class="spinner"></span> Analyzing screenshot with Gemini...';
+
+  const base64 = dataUrl.split(',')[1];
+  const mediaType = dataUrl.split(';')[0].split(':')[1];
+
+  const prompt = `This is a TradingView chart screenshot. Extract ALL visible indicator values. Return ONLY a JSON object with these fields (use null if not visible):
+
+{
+  "coin": "BTC/USDT or whatever pair is shown",
+  "price": 85000,
+  "atr": 423.5,
+  "rsi": 42.3,
+  "tf": "5m",
+  "ema": "above" or "below" or "cross_up" or "cross_down" or null,
+  "macd": "bull" or "bear" or "cross_up" or "cross_down" or null,
+  "bb": "lower" or "middle" or "upper" or "squeeze" or null,
+  "vol": "low" or "normal" or "high" or "spike" or null
+}
+
+Rules:
+- ATR: the number shown on ATR indicator (NOT percentage)
+- RSI: the number 0-100 from RSI indicator
+- EMA: is price above or below the EMA line? are there crossovers?
+- MACD: is the histogram positive or negative? any crossovers?
+- BB: is price near upper, lower, middle band? are bands squeezed?
+- Volume: compare recent bars to average
+- Return ONLY valid JSON, no markdown, no explanation`;
+
+  try {
+    const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mediaType, data: base64 } },
+            { text: prompt }
+          ]
+        }],
+        generationConfig: { temperature: 0.1, maxOutputTokens: 1000 }
+      })
+    });
+
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const text = data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    if (!text) throw new Error('Empty response from Gemini');
+
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    // Auto-fill fields
+    if (parsed.coin) { const sel = document.getElementById('coin'); for(let o of sel.options) { if(o.value.includes(parsed.coin.split('/')[0])) { sel.value = o.value; break; } } }
+    if (parsed.price) fillField('price', parsed.price);
+    if (parsed.atr) fillField('atr', parsed.atr);
+    if (parsed.rsi) fillField('rsi', parsed.rsi);
+    if (parsed.tf) { const sel = document.getElementById('tf'); for(let o of sel.options) { if(o.value === parsed.tf) { sel.value = parsed.tf; break; } } }
+    if (parsed.ema) document.getElementById('ema').value = parsed.ema;
+    if (parsed.macd) document.getElementById('macd').value = parsed.macd;
+    if (parsed.bb) document.getElementById('bb').value = parsed.bb;
+    if (parsed.vol) document.getElementById('vol').value = parsed.vol;
+
+    area.classList.remove('processing');
+    area.classList.add('done');
+    document.getElementById('parseStatus').innerHTML = '<span style="color:var(--ok)">✓ Values extracted! Review and edit if needed, then press CALCULATE</span>';
+
+  } catch(err) {
+    area.classList.remove('processing');
+    document.getElementById('parseStatus').innerHTML = '<span style="color:var(--er)">Error: ' + err.message + '</span><br><span style="color:var(--tx3)">Fill in data manually</span>';
+  }
+}
+
+function fillField(id, value) {
+  const el = document.getElementById(id);
+  el.value = value;
+  el.classList.add('filled');
+}
+
+// ============ CALCULATOR ============
+function calculate() {
+  const atrVal = parseFloat(document.getElementById('atr').value);
+  if (!atrVal || atrVal <= 0) {
+    alert('Enter ATR value!');
+    return;
+  }
+
+  const coin = document.getElementById('coin').value;
+  const ci = COINS[coin] || { p: 100, ml: 10 };
+  const ex = EXCHANGES[document.getElementById('exchange').value] || EXCHANGES['Nado'];
+  const cp = parseFloat(document.getElementById('price').value) || ci.p;
+  const rsi = parseFloat(document.getElementById('rsi').value) || 50;
+  const tf = document.getElementById('tf').value;
+  const goal = document.getElementById('goal').value;
+  const ema = document.getElementById('ema').value;
+  const macd = document.getElementById('macd').value;
+  const bb = document.getElementById('bb').value;
+  const vol = document.getElementById('vol').value;
+  const funding = document.getElementById('funding').value;
+  const isVar = document.getElementById('exchange').value === 'Variational';
+
+  const atrPct = cp > 0 ? (atrVal / cp) * 100 : 1;
+  const tm = { "1m":1, "5m":5, "15m":15, "30m":30, "1h":60 }[tf] || 5;
+  const iF = goal === 'volume', iP = goal === 'pnl';
+
+  // Volatility
+  let vl, vn, vc;
+  if (atrPct < 0.3) { vl=1; vn="Very Low"; vc="#10b981"; }
+  else if (atrPct < 0.6) { vl=2; vn="Low"; vc="#34d399"; }
+  else if (atrPct < 1) { vl=3; vn="Moderate"; vc="#3b82f6"; }
+  else if (atrPct < 2) { vl=4; vn="High"; vc="#f59e0b"; }
+  else if (atrPct < 4) { vl=5; vn="Very High"; vc="#ef4444"; }
+  else { vl=6; vn="EXTREME"; vc="#dc2626"; }
+
+  // RSI
+  let rs, rc, rd;
+  if (rsi<20) { rs="Extreme Oversold"; rc="#10b981"; rd="LONG"; }
+  else if (rsi<30) { rs="Oversold"; rc="#34d399"; rd="LONG"; }
+  else if (rsi<40) { rs="Weak/Bear"; rc="#94a3b8"; rd="Lean LONG"; }
+  else if (rsi<60) { rs="Neutral"; rc="#64748b"; rd="Both OK"; }
+  else if (rsi<70) { rs="Weak/Bull"; rc="#94a3b8"; rd="Lean SHORT"; }
+  else if (rsi<80) { rs="Overbought"; rc="#f87171"; rd="SHORT"; }
+  else { rs="Extreme OB"; rc="#ef4444"; rd="SHORT"; }
+
+  // Signal score
+  let bull = 0, bear = 0;
+  if (rsi<40) bull++; if (rsi<25) bull++;
+  if (rsi>60) bear++; if (rsi>75) bear++;
+  if (ema==='above'||ema==='cross_up') bull++;
+  if (ema==='below'||ema==='cross_down') bear++;
+  if (macd==='bull'||macd==='cross_up') bull++;
+  if (macd==='bear'||macd==='cross_down') bear++;
+  if (bb==='lower') bull++; if (bb==='upper') bear++;
+  if (funding==='neg'||funding==='neg_high') bull++;
+  if (funding==='pos_high') bear++;
+  const strength = Math.max(bull, bear);
+  const domDir = bull > bear ? 'LONG' : bear > bull ? 'SHORT' : 'Neutral';
+
+  // Calculate settings
+  const totalFee = ex.fee * 2;
+  const breakeven = (totalFee + 0.02).toFixed(2);
+  let signal, maxAtr, cooldown, mode, deposit, entry, leverage;
+  let dcaStep, dcaTrig, tpMode, smart1st, trailTrig, trailStep, stopLoss, hardTp;
+
+  if (vl >= 5 || isVar) {
+    const extreme = isVar && vl < 5 ? false : true;
+    signal = extreme ? "8-9" : "6-7";
+    maxAtr = (atrPct * (extreme ? 1.1 : 1.5)).toFixed(2);
+    cooldown = Math.max(tm * 20, isVar ? 180 : 120);
+    mode = "Conservative"; deposit = isVar ? "$15-30" : "$20-50";
+    entry = isVar ? "60%" : "40%"; leverage = Math.min(2, ci.ml);
+    dcaStep = "20%"; dcaTrig = (atrPct * 0.5).toFixed(2);
+    tpMode = "Smart TP"; smart1st = breakeven; hardTp = "--";
+    trailTrig = (atrPct * 0.4).toFixed(2); trailStep = (atrPct * 0.15).toFixed(2);
+    stopLoss = (atrPct * (isVar ? 1.5 : 1.0)).toFixed(2);
+  } else if (iF) {
+    signal = vl<=2 ? "2-3" : vl<=3 ? "3-4" : "4-5";
+    maxAtr = (atrPct * 2.5).toFixed(2);
+    cooldown = Math.max(tm * 15, 15); mode = "Farm";
+    deposit = "$5-15"; entry = "100%";
+    leverage = Math.min(vl<=2?10:vl<=3?7:5, ci.ml);
+    dcaStep = "--"; dcaTrig = "--"; tpMode = "Hard TP";
+    hardTp = Math.max(ex.fee*2, atrPct*0.2).toFixed(2); smart1st = "--";
+    trailTrig = "--"; trailStep = "--";
+    stopLoss = (atrPct * 0.5).toFixed(2);
+  } else if (iP) {
+    signal = vl<=3 ? "6-7" : "7-8";
+    maxAtr = (atrPct * 1.5).toFixed(2);
+    cooldown = Math.max(tm * 20, 120); mode = "Conservative";
+    deposit = "$20-50"; entry = "50%";
+    leverage = Math.min(vl<=3?3:2, ci.ml);
+    dcaStep = "25%"; dcaTrig = (atrPct * 0.4).toFixed(2);
+    tpMode = "Smart TP"; smart1st = breakeven; hardTp = "--";
+    trailTrig = (atrPct * 0.5).toFixed(2); trailStep = (atrPct * 0.15).toFixed(2);
+    stopLoss = (atrPct * 1.2).toFixed(2);
+  } else {
+    signal = vl<=2 ? "4-5" : vl<=3 ? "5-6" : "6-7";
+    maxAtr = (atrPct * 1.8).toFixed(2);
+    cooldown = Math.max(tm * 17, 60); mode = "Farm";
+    deposit = "$10-25"; entry = "70%";
+    leverage = Math.min(vl<=2?5:3, ci.ml);
+    dcaStep = "30%"; dcaTrig = (atrPct * 0.3).toFixed(2);
+    tpMode = "Smart TP"; smart1st = breakeven; hardTp = "--";
+    trailTrig = (atrPct * 0.3).toFixed(2); trailStep = (atrPct * 0.1).toFixed(2);
+    stopLoss = (atrPct * 0.8).toFixed(2);
+  }
+
+  if (!ex.hasLev) leverage = "auto (API)";
+  const lv = typeof leverage === 'number' ? leverage : 5;
+  const ad = parseInt(deposit.replace('$','').split('-')[1] || deposit.replace('$',''));
+  const tpd = Math.floor(1440 / cooldown);
+  const dv = tpd * ad * lv;
+  const levStr = typeof leverage === 'number' ? leverage + 'x' : leverage;
+
+  // Warnings
+  const warns = [];
+  if (vl>=5) warns.push("EXTREME volatility! Consider pausing bot or reducing size.");
+  if (rsi<20||rsi>80) warns.push("RSI at extreme — high reversal probability.");
+  if (vol==='spike') warns.push("Volume spike — unusual activity, be cautious.");
+  if (bb==='squeeze') warns.push("BB squeeze — expect sharp move, widen SL.");
+  if (funding==='pos_high'&&domDir==='LONG') warns.push("Funding high + LONG = you pay funding. Consider SHORT.");
+  if (funding==='neg_high'&&domDir==='SHORT') warns.push("Negative funding + SHORT = you pay funding. Consider LONG.");
+  if (isVar) warns.push("Variational: PnL + hold >24h matter most! Keep trades profitable.");
+  if (strength>=4) warns.push("Strong confluence (" + domDir + ") — good entry opportunity.");
+
+  // ============ RENDER RESULTS ============
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('emptyState').style.display = 'none';
+
+  // Analysis
+  const dirColor = domDir==='LONG' ? '#10b981' : domDir==='SHORT' ? '#ef4444' : '#64748b';
+  document.getElementById('analysisGrid').innerHTML =
+    metric('ATR%', atrPct.toFixed(3)+'%', vn, vc) +
+    metric('RSI', rsi, rs, rc) +
+    metric('Signal', domDir, 'strength: '+strength+'/6', dirColor);
+
+  // Indicator details
+  let indHtml = '';
+  const indLabels = { above:"Price > EMA ↑", below:"Price < EMA ↓", cross_up:"Golden Cross ↑", cross_down:"Death Cross ↓",
+    bull:"Histogram + ↑", bear:"Histogram - ↓", cross_up_m:"Bull cross ↑", cross_down_m:"Bear cross ↓",
+    lower:"Near lower ↑", middle:"Middle →", upper:"Near upper ↓", squeeze:"Squeeze ⚡",
+    low:"Below avg", normal:"Normal", high:"Above avg", spike:"Spike!",
+    pos_low:"+normal", pos_high:"+high (SHORT better)", neg:"-neg (LONG better)", neg_high:"-very neg (LONG!)" };
+  const indColors = { above:"#10b981", below:"#ef4444", cross_up:"#10b981", cross_down:"#ef4444",
+    bull:"#10b981", bear:"#ef4444", cross_up_m:"#34d399", cross_down_m:"#f87171",
+    lower:"#10b981", upper:"#ef4444", middle:"#64748b", squeeze:"#f59e0b",
+    low:"#f59e0b", normal:"#64748b", high:"#10b981", spike:"#ef4444",
+    pos_low:"#64748b", pos_high:"#f59e0b", neg:"#3b82f6", neg_high:"#10b981" };
+
+  if (ema) indHtml += row('EMA', indLabels[ema]||ema, indColors[ema]||'#64748b');
+  if (macd) indHtml += row('MACD', indLabels[macd]||macd, indColors[macd]||'#64748b');
+  if (bb) indHtml += row('BB', indLabels[bb]||bb, indColors[bb]||'#64748b');
+  if (vol) indHtml += row('Volume', indLabels[vol]||vol, indColors[vol]||'#64748b');
+  if (funding) indHtml += row('Funding', indLabels[funding]||funding, indColors[funding]||'#64748b');
+  document.getElementById('indicatorDetails').innerHTML = indHtml;
+
+  // Warnings
+  if (warns.length) {
+    document.getElementById('warningsCard').style.display = 'block';
+    document.getElementById('warningsList').innerHTML = warns.map(w => '<div class="warn">⚠ <span>'+w+'</span></div>').join('');
+  } else {
+    document.getElementById('warningsCard').style.display = 'none';
+  }
+
+  // Global settings
+  document.getElementById('globalSettings').innerHTML =
+    row('9. Timeframe', tf) + row('10. Signal threshold', signal) +
+    row('11. Max ATR%', maxAtr+'%') + row('12. Cooldown', cooldown+'m') +
+    row('13. Mode', mode) + row('24. Breakeven', breakeven+'%');
+
+  // Pair settings
+  document.getElementById('pairSettings').innerHTML =
+    row('14. Deposit', deposit) + row('15. Entry %', entry) +
+    row('16. Leverage', levStr) + row('17. DCA step', dcaStep) +
+    row('18. DCA trigger', dcaTrig==='--'?'--':dcaTrig+'%');
+
+  // TP settings
+  document.getElementById('tpSettings').innerHTML =
+    row('19. TP Mode', tpMode) +
+    (tpMode==='Hard TP' ? row('20. Hard TP', hardTp+'%') : row('20. Smart 1st', smart1st+'%')) +
+    row('21. Trail trigger', trailTrig==='--'?'--':trailTrig+'%') +
+    row('22. Trail step', trailStep==='--'?'--':trailStep+'%');
+
+  // Risk
+  document.getElementById('riskSettings').innerHTML =
+    '<div class="row" style="border:1px solid rgba(239,68,68,0.2)"><span class="lbl" style="color:#ef4444">23. Stop Loss</span><span class="val" style="color:#f87171">'+stopLoss+'%</span></div>' +
+    row('24. Breakeven', breakeven+'%');
+
+  // Estimates
+  document.getElementById('estimatesGrid').innerHTML =
+    metric('Trades/day', tpd, '', '#38bdf8') +
+    metric('Daily volume', '$'+dv.toLocaleString(), '', '#10b981') +
+    metric('Weekly volume', '$'+(dv*7).toLocaleString(), '', '#10b981');
+
+  // Formulas
+  document.getElementById('formulas').innerHTML =
+    '<b>ATR%</b> = '+atrVal+' / '+cp+' × 100 = <span class="hl">'+atrPct.toFixed(3)+'%</span><br>' +
+    '<b>Max ATR%</b> = '+atrPct.toFixed(3)+'% × multiplier = <span class="hl">'+maxAtr+'%</span><br>' +
+    '<b>Breakeven</b> = fee('+ex.fee+'%) × 2 + slippage = <span class="hl">'+breakeven+'%</span><br>' +
+    '<b>Cooldown</b> = '+tf+' × candles = <span class="hl">'+cooldown+'m</span><br>' +
+    '<b>Volume/day</b> = deposit × leverage × '+tpd+' trades = <span class="hl">$'+dv.toLocaleString()+'</span>';
+
+  // Scroll to results
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ============ HELPERS ============
+function row(label, value, color) {
+  const dim = value === '--' ? ' dim' : '';
+  const style = color ? 'color:'+color : '';
+  return '<div class="row"><span class="lbl">'+label+'</span><span class="val'+dim+'" style="'+style+'">'+value+'</span></div>';
+}
+function metric(label, value, sub, color) {
+  return '<div class="metric"><span class="l">'+label+'</span><span class="v" style="color:'+color+'">'+value+'</span>'+(sub?'<span class="s" style="color:'+color+'">'+sub+'</span>':'')+'</div>';
+}
+
+// ============ INIT ============
+loadApiKey();
+</script>
+</body>
+</html>
